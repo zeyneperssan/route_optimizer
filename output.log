@@ -1,0 +1,92 @@
+﻿====================================================
+ KARGO DAĞITIM OPTİMİZASYONU
+====================================================
+  Hedef (objective) : distance
+  Sipariş dosyası    : data/siparisler.csv
+  Araç dosyası       : data/araclar.csv
+  ORS anahtarı       : VAR
+----------------------------------------------------
+  Sipariş sayısı     : 12 (teslimat 9, toplama 3)
+  Toplam teslimat    : 106.5 kg / 316.0 desi
+  Filo kapasitesi    : 2360 kg / 1450 desi  (3 araç)
+----------------------------------------------------
+  Geocode edilen adres : 13/13 başarılı
+  Doğrulama haritası   : cache\geocode_kontrol.html (tarayıcıda açıp noktaları kontrol edin)
+----------------------------------------------------
+  Matris boyutu        : 13 x 13
+  Ortalama mesafe/süre : 18.6 km / 18.7 dk
+  En uzun bağlantı     : KP010 -> KP012 (42.5 km)
+  Yol / kuş uçuşu oranı: ortalama 1.46x, en yüksek 2.54x
+----------------------------------------------------
+  ✓ MODÜL 4: Çift kapasite (kg + desi), çok araç
+  ✓ MODÜL 5: Heterojen filo, sabit maliyet, max durak sınırı
+
+  Kullanılan araç      : 1/3
+    34-PNL-01    12 durak   119.2 km  ₺1793.69
+  Toplam maliyet       : ₺1793.69
+----------------------------------------------------
+====================================================
+
+  ✓ MODÜL 6: Zaman pencereleri + servis süresi + vardiya sınırı
+  ✓ MODÜL 7: Soft time windows (SLA/gecikme cezası) — EXPRESS/STANDART
+  ✓ MODÜL 8: Backhaul (toplama/iade) hazırlandı
+
+  Kullanılan araç      : 1/3
+    34-PNL-01    12 durak   119.2 km  ₺1793.69
+                 Varış zamanları (dk): [0, 258, 273]...
+  Toplam maliyet       : ₺1793.69
+  Rota haritası        : cache\rota_haritasi.html (tarayıcıda açıp rotaları kontrol edin)
+----------------------------------------------------
+  Modül 6-8 tamam. Tüm kısıtlar aktif.
+====================================================
+
+======================================================================
+ 🔄 MODÜL 9: MALİYET MODELİ + ÇOK AMAÇLI SENARYO
+======================================================================
+
+  🔷 Senaryo: DISTANCE
+    Kuruluyor... ✓
+    Mesafe      : 119.2 km
+    Süre        : 8.0 saat
+    Maliyet     : ₺1794
+    Araç sayısı : 1
+    Zamanında   : %100
+
+  🔷 Senaryo: TIME
+    Kuruluyor... ✓
+    Mesafe      : 10.7 km
+    Süre        : 8.0 saat
+    Maliyet     : ₺980
+    Araç sayısı : 1
+    Zamanında   : %100
+
+  🔷 Senaryo: COST
+    Kuruluyor... ✓
+    Mesafe      : 81.7 km
+    Süre        : 8.0 saat
+    Maliyet     : ₺1513
+    Araç sayısı : 1
+    Zamanında   : %100
+
+=====================================================================================
+ SENARYO KARŞILAŞTIRMASI
+=====================================================================================
+Senaryo          Mesafe       Süre    Maliyet   Araç    KG%   Desi%  Zamanında
+-------------------------------------------------------------------------------------
+DISTANCE         119.2 km       8.0 h ₺    1794      1     5%     27%       100%
+TIME              10.7 km       8.0 h ₺     980      1     5%     27%       100%
+COST              81.7 km       8.0 h ₺    1513      1     5%     27%       100%
+=====================================================================================
+
+  💡 ÖNERİLER:
+    📊 Çevre dostu (min mesafe)     → TIME: 10.7 km
+    ⏱️  Hızlı teslimat (min süre)   → DISTANCE: 8.0 saat (119.2 km)
+    💰 Karlı işletme (min maliyet) → TIME: ₺980
+=====================================================================================
+
+  📈 TRADE-OFF ANALİZİ:
+    • Mesafe vs Maliyet: COST senaryo 0.0 km daha kısa
+                        ₺0 fazla maliyet
+    • Maliyet vs Süre: TIME senaryo ₺-814 daha ucuz
+    • Seçim: İşletme karlılığını optimize etmek için TIME senaryo kullanın
+=====================================================================================

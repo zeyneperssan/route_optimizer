@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Optimizer — Canlı Dağıtım Yönetim Paneli</title>
+
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Josefin+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'heading': ['Josefin Sans', 'sans-serif'],
+                        'display': ['Cinzel', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#EFF6FF',
+                            100: '#DBEAFE',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        accent: {
+                            orange: '#F97316',
+                            green: '#10B981',
+                            red: '#EF4444',
+                            purple: '#8B5CF6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8F0;
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+        }
+
+        .dark {
+            --bg-main: #0B132B;
+            --card-bg: #1C2541;
+            --border-color: #3A506B;
+            --text-main: #F1F5F9;
+            --text-sub: #94A3B8;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        .card-custom {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .card-custom:hover {
+            box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn-brand {
+            background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%);
+            color: white;
+            transition: all 0.2s ease;
+        }
+        .btn-brand:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #388463 0%, #245842 100%);
+            box-shadow: 0 6px 16px -2px rgba(27, 67, 50, 0.45);
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: #1E293B;
+            color: #F8FAFC;
+            border-radius: 12px;
+            padding: 4px;
+        }
+        .custom-popup .leaflet-popup-tip {
+            background: #1E293B;
+        }
+
+        /* Loading Overlay */
+        .spinner-ring {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #2563EB;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    
+    <div id="toastContainer" class="fixed top-20 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    
+    <nav class="sticky top-0 z-40 backdrop-blur-md bg-white/90 dark:bg-[#0B132B]/90 border-b border-slate-200 dark:border-slate-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg text-white font-bold" style="background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%); box-shadow: 0 10px 15px -3px rgba(27, 67, 50, 0.35);">
+                        <svg class="w-6 h-6 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="font-heading font-bold text-lg tracking-wide text-blue-900 dark:text-blue-400">ROUTE OPTIMIZER</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Akıllı Rota & Dağıtım Yönetimi</p>
+                    </div>
+                </div>
+
+                
+                <div class="flex items-center gap-2 sm:gap-4">
+                    
+                    
+                    <div class="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+                        <button onclick="switchScenario('distance')" id="btn-distance" class="px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600">
+                            📏 Mesafe (Min Km)
+                        </button>
+                        <button onclick="switchScenario('time')" id="btn-time" class="px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600">
+                            ⏱️ Süre (Hızlı)
+                        </button>
+                        <button onclick="switchScenario('cost')" id="btn-cost" class="px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600">
+                            💰 Maliyet (En Karlı)
+                        </button>
+                        <button onclick="openCustomScenarioModal()" id="btn-custom" class="px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600 flex items-center gap-1.5">
+                            <span>🎛️ Özel (Hibrit)</span>
+                            <span id="badgeCustomWeights" class="hidden text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 rounded font-bold">50/40/10</span>
+                        </button>
+                    </div>
+
+                    
+                    <button onclick="triggerReoptimization()" id="recalcBtn" class="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all">
+                        <svg id="recalcIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Hesapla</span>
+                    </button>
+
+                    
+                    <button onclick="openNewOrderModal()" class="btn-brand px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Yeni Sipariş / Rota</span>
+                    </button>
+
+                    
+                    <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-xl bg-slate-100 dark:bg-slate-800 transition-colors" title="Temayı Değiştir">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+    
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        
+        <div id="uyariBanner" class="hidden rounded-xl border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-4 py-3 shadow-md">
+            <div class="flex items-start gap-3">
+                <span class="text-2xl leading-none">⚠️</span>
+                <div class="flex-1 text-sm">
+                    <div class="font-bold text-base mb-1">Dikkat: Optimizasyon Uyarısı</div>
+                    <div id="uyariBannerContent" class="space-y-1"></div>
+                </div>
+            </div>
+        </div>
+
+        
+        
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            
+            <div class="card-custom p-5 relative overflow-hidden group">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mesafe Metrikleri</span>
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.553-.894L9 7.971" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpi-km" class="text-3xl font-display font-bold text-slate-800 dark:text-white">--</span>
+                    <span class="text-xs font-semibold text-slate-500">km (Toplam Tur)</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                    <div class="px-2 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50">
+                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold block">🔵 GİDİŞ</span>
+                        <strong class="text-xs text-blue-700 dark:text-blue-300"><span id="kpi-gidis-km">--</span> km</strong>
+                    </div>
+                    <div class="px-2 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50">
+                        <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">🟠 DÖNÜŞ</span>
+                        <strong class="text-xs text-amber-700 dark:text-amber-300"><span id="kpi-donus-km">--</span> km</strong>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="card-custom p-5 relative overflow-hidden group">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tahmini Süre</span>
+                    <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpi-sure" class="text-3xl font-display font-bold text-slate-800 dark:text-white">--</span>
+                    <span class="text-xs font-semibold text-slate-500">dk (Toplam Sefer)</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                    <div class="px-2 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50">
+                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold block">🔵 GİDİŞ</span>
+                        <strong class="text-xs text-blue-700 dark:text-blue-300"><span id="kpi-gidis-sure">--</span> dk</strong>
+                    </div>
+                    <div class="px-2 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50">
+                        <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">🟠 DÖNÜŞ</span>
+                        <strong class="text-xs text-amber-700 dark:text-amber-300"><span id="kpi-donus-sure">--</span> dk</strong>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="card-custom p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tahmini Filo Maliyeti</span>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span class="text-xl font-bold text-emerald-600">₺</span>
+                    <span id="kpi-cost" class="text-3xl font-display font-bold text-slate-800 dark:text-white">--</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    Sabit filo + km başına yakıt gideri
+                </p>
+            </div>
+
+            
+            <div class="card-custom p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Görevdeki Araçlar / SLA</span>
+                    <div class="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpi-vehicles" class="text-3xl font-display font-bold text-slate-800 dark:text-white">--</span>
+                    <span class="text-sm font-semibold text-slate-500">araç aktif</span>
+                </div>
+                <p class="text-xs text-orange-600 dark:text-orange-400 font-medium mt-2 flex items-center gap-1">
+                    <span>⚡ %<span id="kpi-sla">100</span> SLA Zamanında Teslimat</span>
+                </p>
+            </div>
+
+        </section>
+
+        
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            
+            
+            <div class="card-custom p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-heading font-bold text-base text-slate-800 dark:text-white">Filo & Araç Durumu</h3>
+                        <span class="text-xs text-slate-400">Canlı Metrikler</span>
+                    </div>
+
+                    
+                    <div id="vehicleList" class="space-y-3">
+                        
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-3.5 rounded-xl border border-blue-100 dark:border-blue-800/40">
+                        <h4 class="text-xs font-bold text-blue-900 dark:text-blue-300 mb-1">💡 Akıllı Optimizasyon İpucu</h4>
+                        <p class="text-[11px] text-blue-700 dark:text-blue-400 leading-relaxed" id="scenarioTip">
+                            Mesafe senaryosu toplam kilometreyi ve karbon salınımını minimize eder.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="lg:col-span-2 card-custom p-5 flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-blue-600"></span>
+                        <div>
+                            <h3 class="font-heading font-bold text-base text-slate-800 dark:text-white">Canlı Rota ve Durak Haritası</h3>
+                            <p class="text-[11px] text-slate-400">Güzergahı gidiş ve dönüş olarak ayrı ayrı inceleyebilirsiniz</p>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="flex items-center bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl gap-1 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+                        <button id="btnModeGidis" onclick="setRouteMode('gidis')" class="px-3 py-1.5 rounded-lg transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm flex items-center gap-1.5">
+                            <span>🔵 Sadece Gidiş</span>
+                            <span id="badgeGidisKm" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-bold">-- km</span>
+                        </button>
+                        <button id="btnModeDonus" onclick="setRouteMode('donus')" class="px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-amber-600 flex items-center gap-1.5">
+                            <span>🟠 Sadece Dönüş</span>
+                            <span id="badgeDonusKm" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 font-bold text-amber-700 dark:text-amber-300">-- km</span>
+                        </button>
+                        <button id="btnModeTum" onclick="setRouteMode('tum')" class="px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-emerald-600 flex items-center gap-1.5">
+                            <span>🟢 Tüm Tur</span>
+                            <span id="badgeTumKm" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 font-bold text-emerald-700 dark:text-emerald-300">-- km</span>
+                        </button>
+                    </div>
+                </div>
+
+                
+                <div id="map" class="w-full h-[450px] rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-10 shadow-inner"></div>
+
+                
+                <div class="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-blue-600 border border-white"></span>
+                        <span>Depo (Kadıköy)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 border border-white"></span>
+                        <span>Teslimat Noktası</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-orange-500 border border-white"></span>
+                        <span>Toplama / İade</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-purple-500 border border-white"></span>
+                        <span>Express Öncelikli</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card-custom p-5">
+                <h3 class="font-heading font-bold text-base text-slate-800 dark:text-white mb-4">Sipariş Kategori Dağılımı</h3>
+                <div class="h-56 relative flex items-center justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="card-custom p-5">
+                <h3 class="font-heading font-bold text-base text-slate-800 dark:text-white mb-4">İşlem Türü Dağılımı</h3>
+                <div class="h-56 relative flex items-center justify-center">
+                    <canvas id="operationChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="card-custom p-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Araç Filtresi</label>
+                        <select id="filterVehicle" onchange="applyFilters(); updateMapForFilter();" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Tümü (Tüm Araçlar)</option>
+                            <optgroup label="Araç Türü">
+                                <option value="MOTO_KURYE">Motosikletler</option>
+                                <option value="PANELVAN">Panelvanlar</option>
+                                <option value="KAMYONET">Kamyonetler</option>
+                            </optgroup>
+                            <optgroup label="Filodaki Araçlar">
+                                <option value="34-MOTO-01">34-MOTO-01 (Motosiklet)</option>
+                                <option value="34-MOTO-02">34-MOTO-02 (Motosiklet)</option>
+                                <option value="34-PNL-01">34-PNL-01 (Panelvan)</option>
+                                <option value="34-PNL-02">34-PNL-02 (Panelvan)</option>
+                                <option value="34-KMY-01">34-KMY-01 (Kamyonet)</option>
+                                <option value="34-KMY-02">34-KMY-02 (Kamyonet)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Durum / İşlem</label>
+                        <select id="filterStatus" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Tümü (İşlemler)</option>
+                            <option value="TESLIMAT">Teslimat</option>
+                            <option value="TOPLAMA">Toplama / İade</option>
+                            <option value="EXPRESS">Express Siparişler</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Arama (Müşteri / İlçe)</label>
+                        <div class="relative">
+                            <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Örn: Moda, Kadıköy, KP001..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-8 pr-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                            <svg class="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="flex items-center gap-2 pt-2 md:pt-0">
+                    <button onclick="applyFilters(); updateMapForFilter();" class="btn-brand px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        <span>Filtrele</span>
+                    </button>
+                    <button onclick="resetFilters()" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors">
+                        Temizle
+                    </button>
+                </div>
+
+            </div>
+            
+            
+            <div id="filterSummary" class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span>Canlı veriler gösteriliyor: <strong id="filterCount" class="text-blue-600 dark:text-blue-400">12 sipariş</strong> listeleniyor.</span>
+                <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="scenarioBadge" class="font-semibold text-emerald-600 dark:text-emerald-400">Aktif Senaryo: DISTANCE</span>
+                </span>
+            </div>
+        </section>
+
+        
+        <section class="card-custom p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="font-heading font-bold text-lg text-slate-800 dark:text-white">Canlı Sipariş & Dağıtım Listesi</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Optimizasyon motorunun araçlara atadığı teslimat planı</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="exportTableToCSV()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>Dışa Aktar (CSV)</span>
+                    </button>
+                </div>
+            </div>
+
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-400 font-semibold uppercase tracking-wider">
+                            <th class="py-3 px-3">Takip No</th>
+                            <th class="py-3 px-3">Müşteri / Lokasyon</th>
+                            <th class="py-3 px-3">Adres</th>
+                            <th class="py-3 px-3">İşlem</th>
+                            <th class="py-3 px-3">Yük (KG / Desi)</th>
+                            <th class="py-3 px-3">Zaman Penceresi</th>
+                            <th class="py-3 px-3">Atanan Araç</th>
+                            <th class="py-3 px-3">Durak Sırası</th>
+                            <th class="py-3 px-3">Durum</th>
+                            <th class="py-3 px-3 text-right">Kaldır</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    
+    <div id="newOrderModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="modalCard">
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold shadow-sm" style="background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%);">
+                        +
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-base text-slate-800 dark:text-white">Yeni Sipariş / Durak Ekle</h3>
+                        <p class="text-xs text-slate-400">Canlı optimizasyona dahil etmek için bilgileri girin</p>
+                    </div>
+                </div>
+                <button onclick="closeNewOrderModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    ✕
+                </button>
+            </div>
+
+            <form id="newOrderForm" onsubmit="submitNewOrder(event)" class="mt-4 space-y-4">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Müşteri Adı / Başlık</label>
+                    <input type="text" id="inpMusteri" required placeholder="Örn: Alıcı - Kadıköy Çarşı" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="relative">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Adres (İstanbul İlçe/Mahalle)</label>
+                    <input type="text" id="inpAdres" autocomplete="off" required placeholder="Yazmaya başlayın: Caferağa, Kadıköy..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none" oninput="validateAddressRealtime()">
+
+                    
+                    <div id="addressValidationBadge" class="hidden mt-2 p-2.5 rounded-lg flex items-start gap-2.5 text-xs border">
+                        <div class="flex-1">
+                            <div id="validationStatus" class="font-medium flex items-center gap-1"></div>
+                            <div id="validationMessage" class="text-[11px] mt-0.5 opacity-80"></div>
+                        </div>
+                    </div>
+
+                    
+                    <div id="adresSuggest" class="hidden absolute z-[60] left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-52 overflow-auto text-xs"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">İşlem Türü</label>
+                        <select id="inpIslem" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="TESLIMAT">Teslimat (Alıcı)</option>
+                            <option value="TOPLAMA">Toplama / İade (Satıcı)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Kategori</label>
+                        <select id="inpKategori" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="STANDART">STANDART</option>
+                            <option value="EXPRESS">EXPRESS (Öncelikli)</option>
+                            <option value="AGIR_YUK">AĞIR YÜK</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Ağırlık (kg)</label>
+                        <input type="number" step="0.5" id="inpKg" value="3.5" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Hacim (Desi)</label>
+                        <input type="number" step="1" id="inpDesi" value="10" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Zaman Aralığı</label>
+                        <div class="flex items-center gap-1">
+                            <input type="text" id="inpZamanBas" value="09:00" placeholder="09:00" class="w-1/2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none text-center">
+                            <span class="text-slate-400">-</span>
+                            <input type="text" id="inpZamanBit" value="18:00" placeholder="18:00" class="w-1/2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none text-center">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Servis Süresi (dk)</label>
+                        <input type="number" id="inpServis" value="5" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Atanacak Araç (İsteğe Bağlı)</label>
+                    <select id="inpArac" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">Otomatik (Sistem En Uygun Aracı Seçsin)</option>
+                        <option value="34-MOTO-01">34-MOTO-01 (Moto Kurye - 70 kg / 70 desi)</option>
+                        <option value="34-MOTO-02">34-MOTO-02 (Moto Kurye - 70 kg / 70 desi)</option>
+                        <option value="34-PNL-01">34-PNL-01 (Panelvan - 1000 kg / 300 desi)</option>
+                        <option value="34-PNL-02">34-PNL-02 (Panelvan - 1000 kg / 300 desi)</option>
+                        <option value="34-KMY-01">34-KMY-01 (Kamyonet - 2000 kg / 450 desi)</option>
+                        <option value="34-KMY-02">34-KMY-02 (Kamyonet - 2000 kg / 450 desi)</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeNewOrderModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold">
+                        Vazgeç
+                    </button>
+                    <button type="submit" id="btnSubmitOrder" class="btn-brand px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md">
+                        <span id="btnSubmitText">Kaydet ve Yeniden Optimize Et</span>
+                        <div id="btnSubmitSpinner" class="spinner-ring hidden"></div>
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    
+    <div id="customScenarioModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="customModalCard">
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl text-white flex items-center justify-center font-bold shadow-sm bg-gradient-to-br from-blue-600 to-indigo-700">
+                        🎛️
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-base text-slate-800 dark:text-white">Özel (Hibrit) Optimizasyon</h3>
+                        <p class="text-xs text-slate-400">Hedeflerin önem ağırlıklarını (%) kendiniz belirleyin</p>
+                    </div>
+                </div>
+                <button onclick="closeCustomScenarioModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    ✕
+                </button>
+            </div>
+
+            
+            <div class="mt-4">
+                <div class="flex items-center justify-between text-xs font-semibold mb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Ağırlık Dağılımı</span>
+                    <span id="txtTotalWeight" class="font-mono font-bold text-blue-600 dark:text-blue-400">Toplam: %100</span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+                    <div id="barCost" style="width: 50%;" class="bg-emerald-500 transition-all duration-150" title="Maliyet"></div>
+                    <div id="barTime" style="width: 40%;" class="bg-purple-500 transition-all duration-150" title="Süre"></div>
+                    <div id="barDist" style="width: 10%;" class="bg-blue-500 transition-all duration-150" title="Mesafe"></div>
+                </div>
+            </div>
+
+            <div class="mt-5 space-y-4">
+                
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            💰 Maliyet Ağırlığı (Yakıt & Sabit Gider)
+                        </label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="numCost" min="0" max="100" value="50" oninput="onCustomNumberChange('cost')" class="w-14 text-center font-mono font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg py-1 outline-none focus:ring-1 focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-slate-400">%</span>
+                        </div>
+                    </div>
+                    <input type="range" id="rangeCost" min="0" max="100" value="50" oninput="onCustomSliderChange('cost')" class="w-full accent-emerald-500 cursor-pointer">
+                </div>
+
+                
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                            ⏱️ Süre Ağırlığı (Hızlı Teslimat & SLA)
+                        </label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="numTime" min="0" max="100" value="40" oninput="onCustomNumberChange('time')" class="w-14 text-center font-mono font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg py-1 outline-none focus:ring-1 focus:ring-purple-500">
+                            <span class="text-xs font-bold text-slate-400">%</span>
+                        </div>
+                    </div>
+                    <input type="range" id="rangeTime" min="0" max="100" value="40" oninput="onCustomSliderChange('time')" class="w-full accent-purple-500 cursor-pointer">
+                </div>
+
+                
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            📏 Mesafe Ağırlığı (Min Km & Karbon)
+                        </label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="numDist" min="0" max="100" value="10" oninput="onCustomNumberChange('dist')" class="w-14 text-center font-mono font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg py-1 outline-none focus:ring-1 focus:ring-blue-500">
+                            <span class="text-xs font-bold text-slate-400">%</span>
+                        </div>
+                    </div>
+                    <input type="range" id="rangeDist" min="0" max="100" value="10" oninput="onCustomSliderChange('dist')" class="w-full accent-blue-500 cursor-pointer">
+                </div>
+            </div>
+
+            
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <span class="block text-[11px] font-semibold text-slate-400 mb-2">Hazır Dengeli Şablonlar:</span>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button type="button" onclick="applyCustomPreset(50, 40, 10)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left border border-slate-200 dark:border-slate-700 transition-colors">
+                        ⚡ %50 Maliyet / %40 Süre / %10 Km
+                    </button>
+                    <button type="button" onclick="applyCustomPreset(34, 33, 33)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left border border-slate-200 dark:border-slate-700 transition-colors">
+                        ⚖️ Eşit Dengeli (%34/%33/%33)
+                    </button>
+                    <button type="button" onclick="applyCustomPreset(20, 70, 10)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left border border-slate-200 dark:border-slate-700 transition-colors">
+                        🚀 Hızlı Teslimat (%70 Süre)
+                    </button>
+                    <button type="button" onclick="applyCustomPreset(20, 20, 60)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left border border-slate-200 dark:border-slate-700 transition-colors">
+                        🌿 Yeşil Rota (%60 Min Km)
+                    </button>
+                </div>
+            </div>
+
+            
+            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeCustomScenarioModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold">
+                    Vazgeç
+                </button>
+                <button type="button" onclick="submitCustomScenario()" id="btnSubmitCustom" class="btn-brand px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md">
+                    <span id="btnSubmitCustomText">🚀 Bu Ağırlıklarla Optimize Et</span>
+                    <div id="btnSubmitCustomSpinner" class="spinner-ring hidden"></div>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    
+    <script>
+        // Global App State
+        let rawData = null;
+        let activeScenario = 'distance';
+        let leafletMap = null;
+        let mapMarkers = [];
+        let mapPolylines = [];
+        let categoryChartInstance = null;
+        let operationChartInstance = null;
+
+        // Vehicle Colors for Map & UI
+        const VEHICLE_COLORS = {
+            '34-MOTO-01': '#F97316', // Turuncu
+            '34-MOTO-02': '#FB923C', // Açık turuncu
+            '34-PNL-01': '#2563EB',  // Mavi
+            '34-PNL-02': '#60A5FA',  // Açık mavi
+            '34-KMY-01': '#10B981',  // Yeşil
+            '34-KMY-02': '#34D399',  // Açık yeşil
+            'default': '#8B5CF6'
+        };
+
+        // Initialize Map
+        function initLeafletMap() {
+            if (leafletMap) return;
+            // Center around Kadikoy/Istanbul
+            leafletMap = L.map('map', { zoomControl: true }).setView([41.0082, 28.9784], 11);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                maxZoom: 19
+            }).addTo(leafletMap);
+        }
+
+        // Fetch Live Dashboard Data
+        async function fetchDashboardData(scenario = null) {
+            try {
+                showToast('Canlı veriler yükleniyor...', 'info');
+                const url = scenario ? `/api/data?scenario=${scenario}` : '/api/data';
+                const response = await fetch(url);
+                const res = await response.json();
+                
+                if (res.success) {
+                    rawData = res.data;
+                    activeScenario = rawData.active_scenario || 'distance';
+                    updateScenarioButtons();
+                    renderDashboard();
+                    showToast('Veriler ve rotalar başarıyla güncellendi.', 'success');
+                } else {
+                    showToast('Veri hatası: ' + res.error, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Sunucu bağlantı hatası!', 'error');
+            }
+        }
+
+        // Uyarı bandını doldur (servis edilemeyen siparişler / kapasite uyarıları)
+        function renderUyariBanner(uyarilar) {
+            const banner = document.getElementById('uyariBanner');
+            const content = document.getElementById('uyariBannerContent');
+            if (!banner || !content) return;
+            const mesajlar = (uyarilar && uyarilar.mesajlar) || [];
+            if (!mesajlar.length) {
+                banner.classList.add('hidden');
+                content.innerHTML = '';
+                return;
+            }
+            let html = mesajlar.map(m => `<div>• ${m}</div>`).join('');
+            if (uyarilar && uyarilar.servis_edilemeyen_sayisi > 0) {
+                html += `<div class="mt-2"><button onclick="clearUnserved()" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-sm">Servis edilemeyenleri listeden kaldır</button></div>`;
+            }
+            content.innerHTML = html;
+            banner.classList.remove('hidden');
+        }
+
+        // Render entire dashboard from rawData
+        // Bir siparişi listeden kaldır (servis edilemeyen dahil her sipariş)
+        async function deleteOrder(kargoNo) {
+            if (!confirm(`${kargoNo} numaralı siparişi listeden kaldırmak istiyor musunuz?`)) return;
+            try {
+                const res = await fetch('/api/orders/delete', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kargo_takip_no: kargoNo })
+                });
+                const j = await res.json();
+                if (j.success) { rawData = j.data; renderDashboard(); showToast(`${kargoNo} kaldırıldı, rota güncellendi.`, 'success'); }
+                else showToast('Hata: ' + j.error, 'error');
+            } catch (e) { showToast('Sunucu bağlantı hatası.', 'error'); }
+        }
+
+        // Servis edilemeyen tüm siparişleri tek seferde kaldır
+        async function clearUnserved() {
+            if (!confirm('Servis edilemeyen tüm siparişler listeden kaldırılsın mı?')) return;
+            try {
+                const res = await fetch('/api/orders/clear_unserved', { method: 'POST' });
+                const j = await res.json();
+                if (j.success) { rawData = j.data; renderDashboard(); showToast('Servis edilemeyenler kaldırıldı.', 'success'); }
+                else showToast('Hata: ' + j.error, 'error');
+            } catch (e) { showToast('Sunucu bağlantı hatası.', 'error'); }
+        }
+
+        // Seçili araç filtresine göre rotaları süz (harita için)
+        function getFilteredRoutes() {
+            if (!rawData || !rawData.routes) return [];
+            const vf = document.getElementById('filterVehicle').value;
+            if (!vf) return rawData.routes;  // "Tümü": tüm rotalar
+            return rawData.routes.filter(r => r.arac_tipi === vf || r.arac_id === vf);
+        }
+
+        // Araç filtresi değişince haritayı sadece o araçla yeniden çiz
+        function updateMapForFilter() {
+            renderMapData(getFilteredRoutes(), (rawData && rawData.orders) || []);
+        }
+
+        let activeRouteMode = 'gidis'; // 'gidis' (sadece gidiş), 'donus' (sadece dönüş), 'tum' (tam tur)
+
+        function setRouteMode(mode) {
+            activeRouteMode = mode;
+            updateRouteModeButtons();
+            renderMapData(getFilteredRoutes(), (rawData && rawData.orders) || []);
+            const modeLabels = {
+                'gidis': '🔵 Sadece Gidiş Güzergahı seçildi (Depo → Duraklar)',
+                'donus': '🟠 Sadece Dönüş Güzergahı seçildi (Son Durak → Depo)',
+                'tum': '🟢 Tüm Tur Güzergahı seçildi (Depo → Duraklar → Depo)'
+            };
+            showToast(modeLabels[mode] || 'Güzergah modu güncellendi.', 'info');
+        }
+
+        function updateRouteModeButtons() {
+            const btnGidis = document.getElementById('btnModeGidis');
+            const btnDonus = document.getElementById('btnModeDonus');
+            const btnTum = document.getElementById('btnModeTum');
+            if (!btnGidis || !btnDonus || !btnTum) return;
+
+            const activeClass = "px-3 py-1.5 rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm flex items-center gap-1.5 font-bold ";
+            const inactiveClass = "px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 font-medium ";
+
+            btnGidis.className = activeRouteMode === 'gidis' 
+                ? activeClass + "text-blue-600 dark:text-blue-300 ring-2 ring-blue-500/40" 
+                : inactiveClass;
+
+            btnDonus.className = activeRouteMode === 'donus' 
+                ? activeClass + "text-amber-600 dark:text-amber-300 ring-2 ring-amber-500/40" 
+                : inactiveClass;
+
+            btnTum.className = activeRouteMode === 'tum' 
+                ? activeClass + "text-emerald-600 dark:text-emerald-300 ring-2 ring-emerald-500/40" 
+                : inactiveClass;
+        }
+
+        function renderDashboard() {
+            if (!rawData) return;
+            renderUyariBanner(rawData.uyarilar);
+
+            // 1. Render KPIs
+            const kpis = rawData.kpis || {};
+            document.getElementById('kpi-km').innerText = kpis.toplam_mesafe_km || '0';
+            document.getElementById('kpi-cost').innerText = (kpis.toplam_maliyet_tl || 0).toLocaleString('tr-TR');
+            document.getElementById('kpi-vehicles').innerText = `${kpis.aktif_araclar || 0}/${kpis.toplam_arac || 0}`;
+            document.getElementById('kpi-sla').innerText = kpis.zamaninda_teslimat_oran || '95';
+
+            const elGidis = document.getElementById('kpi-gidis-km');
+            const elDonus = document.getElementById('kpi-donus-km');
+            if (elGidis) elGidis.innerText = kpis.toplam_gidis_km || '0';
+            if (elDonus) elDonus.innerText = kpis.toplam_donus_km || '0';
+
+            const elSure = document.getElementById('kpi-sure');
+            const elGidisSure = document.getElementById('kpi-gidis-sure');
+            const elDonusSure = document.getElementById('kpi-donus-sure');
+            if (elSure) elSure.innerText = kpis.toplam_sure_dk || '0';
+            if (elGidisSure) elGidisSure.innerText = kpis.toplam_gidis_sure_dk || '0';
+            if (elDonusSure) elDonusSure.innerText = kpis.toplam_donus_sure_dk || '0';
+
+            const badgeGidis = document.getElementById('badgeGidisKm');
+            const badgeDonus = document.getElementById('badgeDonusKm');
+            const badgeTum = document.getElementById('badgeTumKm');
+            if (badgeGidis) badgeGidis.innerText = `${kpis.toplam_gidis_km || 0} km • ~${kpis.toplam_gidis_sure_dk || 0} dk`;
+            if (badgeDonus) badgeDonus.innerText = `${kpis.toplam_donus_km || 0} km • ~${kpis.toplam_donus_sure_dk || 0} dk`;
+            if (badgeTum) badgeTum.innerText = `${kpis.toplam_mesafe_km || 0} km • ~${kpis.toplam_sure_dk || 0} dk`;
+
+            updateRouteModeButtons();
+
+            // Scenario Tips
+            const tips = {
+                'distance': 'Mesafe senaryosu toplam kilometreyi ve karbon salınımını minimize eder.',
+                'time': 'Süre senaryosu teslimatları en hızlı şekilde tamamlayarak müşteri memnuniyetini maksimize eder.',
+                'cost': 'Maliyet senaryosu sabit filo ve km giderlerini dengeleyerek en yüksek karlılığı sağlar.'
+            };
+            document.getElementById('scenarioTip').innerText = tips[activeScenario] || tips['distance'];
+            document.getElementById('scenarioBadge').innerText = `Aktif Senaryo: ${activeScenario.toUpperCase()}`;
+
+            // 2. Render Vehicles List & Update Filter Dropdown
+            renderVehiclesList(rawData.vehicles || []);
+            updateVehicleFilterOptions(rawData.vehicles || []);
+
+            // 3. Render Orders Table (with currently applied filters)
+            applyFilters();
+
+            // 4. Render Charts
+            renderCharts(rawData.charts || {});
+
+            // 5. Render Map
+            renderMapData(getFilteredRoutes(), rawData.orders || []);
+        }
+
+        // Render Vehicle Status Cards
+        function renderVehiclesList(vehicles) {
+            const container = document.getElementById('vehicleList');
+            container.innerHTML = '';
+
+            vehicles.forEach(v => {
+                const color = VEHICLE_COLORS[v.arac_id] || VEHICLE_COLORS['default'];
+                const isAktif = v.durum === 'Aktif';
+                
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border transition-all ${isAktif ? 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700' : 'bg-slate-100/50 dark:bg-slate-800/20 border-dashed border-slate-200 dark:border-slate-800 opacity-60'}`;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background-color: ${color};"></span>
+                            <div>
+                                <span class="font-bold text-xs text-slate-800 dark:text-white">${v.arac_id}</span>
+                                <span class="text-[10px] text-slate-400 block">${v.arac_tipi}</span>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isAktif ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">
+                            ${v.durum}
+                        </span>
+                    </div>
+                    ${isAktif ? `
+                        
+                        <div class="grid grid-cols-3 gap-1.5 text-[11px] mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                            <button onclick="setRouteMode('gidis')" title="Haritada sadece bu gidiş güzergahını göster" class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-left border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all cursor-pointer">
+                                <span class="block text-[9px] font-bold text-blue-600 dark:text-blue-400">🔵 GİDİŞ</span>
+                                <strong class="text-xs">${v.gidis_km || v.mesafe_km} km</strong>
+                                <span class="text-[9px] text-blue-600/70 dark:text-blue-400/70 block">~${v.gidis_sure_dk || Math.round((v.gidis_km||v.mesafe_km)/25*60 + 5)} dk</span>
+                            </button>
+                            <button onclick="setRouteMode('donus')" title="Haritada sadece depoya dönüş güzergahını göster" class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-left border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer">
+                                <span class="block text-[9px] font-bold text-amber-600 dark:text-amber-400">🟠 DÖNÜŞ</span>
+                                <strong class="text-xs">${v.donus_km || 0} km</strong>
+                                <span class="text-[9px] text-amber-600/70 dark:text-amber-400/70 block">~${v.donus_sure_dk || Math.round((v.donus_km||0)/25*60)} dk</span>
+                            </button>
+                            <button onclick="setRouteMode('tum')" title="Haritada tam turu göster" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 text-left border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all cursor-pointer">
+                                <span class="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400">🟢 TAM TUR</span>
+                                <strong class="text-xs">${v.mesafe_km} km</strong>
+                                <span class="text-[9px] text-emerald-600/70 dark:text-emerald-400/70 block">~${v.toplam_sure_dk || Math.round(v.mesafe_km/25*60 + 5)} dk</span>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-2 px-1">
+                            <div>Durak: <strong>${v.durak_sayisi} durak</strong></div>
+                            <div class="text-right">Maliyet: <strong>₺${v.maliyet_tl}</strong></div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                                <span>KG: ${v.kg_doluluk}</span>
+                                <span>Desi: ${v.desi_doluluk}</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full" style="width: ${v.kg_doluluk}; background-color: ${color};"></div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="text-[11px] text-slate-400 text-center py-1">Bu senaryoda depoda bekliyor</div>
+                    `}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Populate & Synchronize Vehicle Filter Dropdown
+        function updateVehicleFilterOptions(vehicles) {
+            const select = document.getElementById('filterVehicle');
+            if (!select || !vehicles || vehicles.length === 0) return;
+            const currentVal = select.value;
+
+            const typeNames = {
+                'MOTO_KURYE': 'Motosikletler',
+                'PANELVAN': 'Panelvanlar',
+                'KAMYONET': 'Kamyonetler'
+            };
+
+            const types = [...new Set(vehicles.map(v => v.arac_tipi).filter(Boolean))];
+
+            let html = '<option value="">Tümü (Tüm Araçlar)</option>';
+            if (types.length > 0) {
+                html += '<optgroup label="Araç Türü">';
+                types.forEach(t => {
+                    const label = typeNames[t] || t;
+                    html += `<option value="${t}">${label}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            html += '<optgroup label="Filodaki Araçlar">';
+            vehicles.forEach(v => {
+                const typeLabel = typeNames[v.arac_tipi] ? typeNames[v.arac_tipi].replace('ler', '').replace('lar', '') : (v.arac_tipi || '');
+                html += `<option value="${v.arac_id}">${v.arac_id} (${typeLabel})</option>`;
+            });
+            html += '</optgroup>';
+
+            select.innerHTML = html;
+            if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        // Gerçek karayolu geometrisini (OSRM) asenkron sokak sokak çiz
+        async function drawRouteStreetGeometry(latlngs, color, isMoto, isDashed = false) {
+            if (latlngs.length < 2) return;
+            try {
+                const coordsStr = latlngs.map(p => `${p[1]},${p[0]}`).join(';');
+                const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.routes && data.routes.length > 0) {
+                    const streetCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    const polyline = L.polyline(streetCoords, {
+                        color: color,
+                        weight: 5,
+                        opacity: 0.85,
+                        dashArray: (isDashed || isMoto) ? '6, 6' : null
+                    }).addTo(leafletMap);
+                    mapPolylines.push(polyline);
+                    return;
+                }
+            } catch (err) {
+                console.warn('OSRM sokak geometrisi yüklenemedi, düz çizgiye dönülüyor:', err);
+            }
+
+            // Fallback düz çizgi
+            const fallbackPolyline = L.polyline(latlngs, {
+                color: color,
+                weight: 4,
+                opacity: 0.8,
+                dashArray: (isDashed || isMoto) ? '6, 6' : null
+            }).addTo(leafletMap);
+            mapPolylines.push(fallbackPolyline);
+        }
+
+        // Render Map Markers & Routes
+        function renderMapData(routes, orders) {
+            initLeafletMap();
+
+            // Clear previous markers & polylines
+            mapMarkers.forEach(m => leafletMap.removeLayer(m));
+            mapPolylines.forEach(p => leafletMap.removeLayer(p));
+            mapMarkers = [];
+            mapPolylines = [];
+
+            const bounds = [];
+
+            // Gerçek Kadıköy Depo Noktası
+            const depotLat = (rawData && rawData.depot && rawData.depot.lat) || 40.997314;
+            const depotLon = (rawData && rawData.depot && rawData.depot.lon) || 29.044531;
+            const depotName = (rawData && rawData.depot && rawData.depot.musteri_adi) || "Kadıköy Ana Depo";
+            const depotAddress = (rawData && rawData.depot && rawData.depot.adres) || "Hasanpaşa, Kadıköy, İstanbul";
+            
+            const depotIcon = L.divIcon({
+                html: `<div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white font-bold text-sm">🏢</div>`,
+                className: 'custom-div-icon',
+                iconSize: [32, 32]
+            });
+            const depotMarker = L.marker([depotLat, depotLon], { icon: depotIcon })
+                .bindPopup(`<div class="p-2 space-y-1"><strong>🏢 ${depotName}</strong><br><span class="text-xs text-slate-300">${depotAddress}</span><br><span class="text-[10px] text-blue-300">Tüm rotaların başlangıç ve bitiş noktası.</span></div>`, { className: 'custom-popup' })
+                .addTo(leafletMap);
+            mapMarkers.push(depotMarker);
+            bounds.push([depotLat, depotLon]);
+
+            // Her rota için çizgileri ve durakları ekle
+            routes.forEach((r) => {
+                const color = VEHICLE_COLORS[r.arac_id] || VEHICLE_COLORS['default'];
+                const customerStops = (r.duraklar || []).slice(1, -1);
+
+                // Durak marker'larını ekle
+                customerStops.forEach((d, idx) => {
+                    const stopIdx = idx + 1;
+                    const stopIcon = L.divIcon({
+                        html: `<div style="background-color: ${color};" class="w-6 h-6 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white text-[10px] font-bold">${stopIdx}</div>`,
+                        className: 'custom-stop-icon',
+                        iconSize: [24, 24]
+                    });
+
+                    const marker = L.marker([d.lat, d.lon], { icon: stopIcon })
+                        .bindPopup(`
+                            <div class="p-2 text-xs space-y-1">
+                                <div class="font-bold text-sm text-blue-400">${d.musteri_adi}</div>
+                                <div><strong>Takip No:</strong> ${d.kargo_takip_no}</div>
+                                <div><strong>Adres:</strong> ${d.adres}</div>
+                                <div><strong>İşlem:</strong> <span class="px-1.5 py-0.5 rounded bg-slate-700 font-semibold">${d.islem_tipi}</span> (${d.kategori})</div>
+                                <div><strong>Yük:</strong> ${d.agirlik_kg} kg / ${d.desi} desi</div>
+                                <div><strong>Araç:</strong> ${r.arac_id} (Durak #${stopIdx})</div>
+                                <div class="pt-1 border-t border-slate-700">
+                                    <div class="text-blue-300"><strong>🔵 Gidiş:</strong> ${r.gidis_km || r.mesafe_km} km (~${r.gidis_sure_dk || Math.round((r.gidis_km||r.mesafe_km)/25*60 + 5)} dk)</div>
+                                    <div class="text-amber-300"><strong>🟠 Dönüş:</strong> ${r.donus_km || 0} km (~${r.donus_sure_dk || Math.round((r.donus_km||0)/25*60)} dk)</div>
+                                    <div class="text-emerald-300"><strong>🟢 Toplam Tur:</strong> ${r.mesafe_km} km (~${r.toplam_sure_dk || Math.round(r.mesafe_km/25*60 + 5)} dk)</div>
+                                </div>
+                                <div><strong>Zaman Penceresi:</strong> ${d.zaman_penceresi}</div>
+                            </div>
+                        `, { className: 'custom-popup' })
+                        .addTo(leafletMap);
+
+                    mapMarkers.push(marker);
+                    bounds.push([d.lat, d.lon]);
+                });
+
+                if (customerStops.length === 0) return;
+
+                // GÜZERGAH MODUNA GÖRE ÇİZİM
+                if (activeRouteMode === 'gidis') {
+                    // 1. SADECE GİDİŞ: Depo -> Duraklar (Depoya dönmez)
+                    const gidisCoords = [[depotLat, depotLon], ...customerStops.map(d => [d.lat, d.lon])];
+                    drawRouteStreetGeometry(gidisCoords, color, r.arac_tipi === 'MOTO_KURYE', false);
+                } else if (activeRouteMode === 'donus') {
+                    // 2. SADECE DÖNÜŞ: Son Durak -> Depo
+                    const lastStop = customerStops[customerStops.length - 1];
+                    const donusCoords = [[lastStop.lat, lastStop.lon], [depotLat, depotLon]];
+                    drawRouteStreetGeometry(donusCoords, '#F59E0B', r.arac_tipi === 'MOTO_KURYE', true);
+                } else {
+                    // 3. TÜM TUR: Depo -> Duraklar -> Depo
+                    const tumCoords = [[depotLat, depotLon], ...customerStops.map(d => [d.lat, d.lon]), [depotLat, depotLon]];
+                    drawRouteStreetGeometry(tumCoords, color, r.arac_tipi === 'MOTO_KURYE', false);
+                }
+            });
+
+            // Servis edilemeyen siparişleri KIRMIZI ✕ ile işaretle
+            (orders || []).forEach(o => {
+                if (o.durum !== 'Servis Edilemedi' || o.lat == null || o.lon == null) return;
+                const icon = L.divIcon({
+                    html: `<div style="background-color:#DC2626;" class="w-7 h-7 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white text-xs font-bold">✕</div>`,
+                    className: 'custom-unserved-icon',
+                    iconSize: [28, 28]
+                });
+                const marker = L.marker([o.lat, o.lon], { icon })
+                    .bindPopup(`
+                        <div class="p-2 text-xs space-y-1">
+                            <div class="font-bold text-sm text-red-500">⚠ Servis Edilemedi</div>
+                            <div><strong>Takip No:</strong> ${o.kargo_takip_no}</div>
+                            <div><strong>Müşteri:</strong> ${o.musteri_adi}</div>
+                            <div><strong>Yük:</strong> ${o.agirlik_kg} kg / ${o.desi} desi</div>
+                            <div><strong>Adres:</strong> ${o.adres}</div>
+                        </div>
+                    `, { className: 'custom-popup' })
+                    .addTo(leafletMap);
+                mapMarkers.push(marker);
+                bounds.push([o.lat, o.lon]);
+            });
+
+            if (bounds.length > 0) {
+                leafletMap.fitBounds(bounds, { padding: [30, 30] });
+            }
+        }
+
+        // Render Chart.js
+        function renderCharts(charts) {
+            // 1. Categories Chart
+            const catCanvas = document.getElementById('categoryChart');
+            if (catCanvas) {
+                if (categoryChartInstance) categoryChartInstance.destroy();
+                const catLabels = charts.categories?.labels || ['STANDART', 'EXPRESS', 'AGIR_YUK'];
+                const catColorMap = {
+                    'STANDART': '#3B82F6', // Mavi
+                    'EXPRESS': '#8B5CF6',  // Mor
+                    'AGIR_YUK': '#EF4444', // Kırmızı
+                    'AĞIR YÜK': '#EF4444',
+                    'DEPO': '#64748B'      // Gri/Slate
+                };
+                const fallbackCatColors = ['#3B82F6', '#8B5CF6', '#EF4444', '#F59E0B', '#10B981', '#64748B'];
+                const catColors = catLabels.map((lbl, idx) => catColorMap[lbl?.toUpperCase()] || fallbackCatColors[idx % fallbackCatColors.length]);
+
+                categoryChartInstance = new Chart(catCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels,
+                        datasets: [{
+                            data: charts.categories?.data || [7, 3, 2],
+                            backgroundColor: catColors,
+                            borderWidth: 2,
+                            borderColor: document.documentElement.classList.contains('dark') ? '#1E293B' : '#FFFFFF'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 11 },
+                                    color: document.documentElement.classList.contains('dark') ? '#CBD5E1' : '#475569'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Operations Chart (Pasta Grafiği)
+            const opCanvas = document.getElementById('operationChart');
+            if (opCanvas) {
+                if (operationChartInstance) operationChartInstance.destroy();
+                const opLabels = charts.operations?.labels || ['TESLIMAT', 'TOPLAMA'];
+                const opColorMap = {
+                    'TESLIMAT': '#10B981', // Canlı Zümrüt Yeşili
+                    'TOPLAMA': '#F97316',  // Canlı Turuncu
+                    'DEPO': '#6366F1',     // İndigo / Mor (Depo için ayrı belirgin renk)
+                    'İADE': '#EC4899'      // Pembe
+                };
+                const fallbackOpColors = ['#10B981', '#F97316', '#6366F1', '#EC4899', '#06B6D4', '#EAB308'];
+                const opColors = opLabels.map((lbl, idx) => opColorMap[lbl?.toUpperCase()] || fallbackOpColors[idx % fallbackOpColors.length]);
+
+                operationChartInstance = new Chart(opCanvas, {
+                    type: 'pie',
+                    data: {
+                        labels: opLabels,
+                        datasets: [{
+                            data: charts.operations?.data || [9, 3],
+                            backgroundColor: opColors,
+                            borderWidth: 2,
+                            borderColor: document.documentElement.classList.contains('dark') ? '#1E293B' : '#FFFFFF'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 11 },
+                                    color: document.documentElement.classList.contains('dark') ? '#CBD5E1' : '#475569'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Live Filtering Functionality
+        function applyFilters() {
+            if (!rawData || !rawData.orders) return;
+
+            const vehicleFilter = document.getElementById('filterVehicle').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+            const searchQuery = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+
+            let filteredOrders = rawData.orders.filter(order => {
+                // Vehicle Filter
+                if (vehicleFilter && order.arac_tipi !== vehicleFilter && order.arac_id !== vehicleFilter) {
+                    return false;
+                }
+                // Status Filter
+                if (statusFilter) {
+                    if (statusFilter === 'EXPRESS' && order.kategori !== 'EXPRESS') return false;
+                    if (statusFilter === 'TESLIMAT' && order.islem_tipi !== 'TESLIMAT') return false;
+                    if (statusFilter === 'TOPLAMA' && order.islem_tipi !== 'TOPLAMA') return false;
+                }
+                // Search Query
+                if (searchQuery) {
+                    const matchName = (order.musteri_adi || '').toLowerCase().includes(searchQuery);
+                    const matchAddress = (order.adres || '').toLowerCase().includes(searchQuery);
+                    const matchNo = (order.kargo_takip_no || '').toLowerCase().includes(searchQuery);
+                    if (!matchName && !matchAddress && !matchNo) return false;
+                }
+                return true;
+            });
+
+            document.getElementById('filterCount').innerText = `${filteredOrders.length} sipariş`;
+
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400 font-medium">Filtreye uygun sipariş bulunamadı.</td></tr>`;
+                return;
+            }
+
+            filteredOrders.forEach(o => {
+                const tr = document.createElement('tr');
+                const isUnserved = o.durum === 'Servis Edilemedi';
+                tr.className = isUnserved
+                    ? 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors';
+
+                const aracCell = isUnserved
+                    ? `<span class="px-2 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300 font-bold whitespace-nowrap">⚠ Servis Edilemedi</span>`
+                    : `<span class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200">${o.arac_id}</span>`;
+
+                // "Çıkar" butonu SADECE servis edilemeyen siparişlerde
+                const cikarCell = isUnserved
+                    ? `<button onclick="deleteOrder('${o.kargo_takip_no}')" title="Siparişi listeden kaldır" class="px-2 py-1 rounded-lg text-red-600 hover:bg-red-100 dark:hover:bg-red-900/40 font-bold text-xs whitespace-nowrap">✕ Çıkar</button>`
+                    : `<span class="text-slate-300 dark:text-slate-600">—</span>`;
+
+                const isExpress = o.kategori === 'EXPRESS';
+                const isToplama = o.islem_tipi === 'TOPLAMA';
+                const isAgir = o.kategori === 'AGIR_YUK';
+
+                const catBadge = isExpress 
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">EXPRESS</span>`
+                    : (isAgir 
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">AĞIR YÜK</span>`
+                        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">STANDART</span>`);
+
+                const islemBadge = isToplama
+                    ? `<span class="text-orange-600 font-bold">● Toplama</span>`
+                    : `<span class="text-emerald-600 font-bold">● Teslimat</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400">${o.kargo_takip_no}</td>
+                    <td class="py-3 px-3 font-semibold text-slate-800 dark:text-white">${o.musteri_adi}</td>
+                    <td class="py-3 px-3 text-slate-500 max-w-xs truncate" title="${o.adres}">${o.adres}</td>
+                    <td class="py-3 px-3">${islemBadge}</td>
+                    <td class="py-3 px-3">${o.agirlik_kg} kg / ${o.desi} desi</td>
+                    <td class="py-3 px-3 font-mono text-slate-500">${o.zaman_baslangic} - ${o.zaman_bitis}</td>
+                    <td class="py-3 px-3">${aracCell}</td>
+                    <td class="py-3 px-3 font-bold text-center">${o.sira !== '-' ? `#${o.sira}` : '-'}</td>
+                    <td class="py-3 px-3">${catBadge}</td>
+                    <td class="py-3 px-3 text-right">${cikarCell}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filterVehicle').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterSearch').value = '';
+            applyFilters();
+            updateMapForFilter();  // harita da tüm rotalara dönsün
+            showToast('Filtreler temizlendi.', 'info');
+        }
+
+        // Scenario Switcher
+        async function switchScenario(scenario) {
+            if (activeScenario === scenario) return;
+            activeScenario = scenario;
+            updateScenarioButtons();
+            await fetchDashboardData(scenario);
+        }
+
+        function updateScenarioButtons() {
+            ['distance', 'time', 'cost', 'custom'].forEach(sc => {
+                const btn = document.getElementById(`btn-${sc}`);
+                if (btn) {
+                    if (sc === activeScenario) {
+                        btn.className = "px-3 py-1.5 rounded-lg transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 font-bold shadow-sm flex items-center gap-1.5";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600 font-medium flex items-center gap-1.5";
+                    }
+                }
+            });
+
+            const badge = document.getElementById('badgeCustomWeights');
+            if (badge && rawData && rawData.custom_weights) {
+                const cw = rawData.custom_weights;
+                badge.textContent = `${Math.round(cw.cost)}/${Math.round(cw.time)}/${Math.round(cw.distance)}`;
+                badge.classList.remove('hidden');
+            }
+        }
+
+        // Custom Scenario Weights Modal & Optimization Logic
+        let customWeights = { cost: 50, time: 40, distance: 10 };
+
+        function openCustomScenarioModal() {
+            const modal = document.getElementById('customScenarioModal');
+            const card = document.getElementById('customModalCard');
+            if (!modal || !card) return;
+            
+            // Mevcut ağırlıkları yükle
+            if (rawData && rawData.custom_weights) {
+                customWeights = Object.assign({}, rawData.custom_weights);
+            }
+            updateCustomModalUI();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeCustomScenarioModal() {
+            const modal = document.getElementById('customScenarioModal');
+            const card = document.getElementById('customModalCard');
+            if (!modal || !card) return;
+            modal.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function updateCustomModalUI() {
+            const c = Math.max(0, parseFloat(customWeights.cost) || 0);
+            const t = Math.max(0, parseFloat(customWeights.time) || 0);
+            const d = Math.max(0, parseFloat(customWeights.distance) || 0);
+            const total = c + t + d;
+            const remaining = Math.max(0, 100 - total);
+
+            const rCost = document.getElementById('rangeCost');
+            const nCost = document.getElementById('numCost');
+            const rTime = document.getElementById('rangeTime');
+            const nTime = document.getElementById('numTime');
+            const rDist = document.getElementById('rangeDist');
+            const nDist = document.getElementById('numDist');
+
+            // Çubukların cetvel ölçeği her zaman tam 0-100 kalsın
+            if (rCost) { rCost.max = 100; rCost.value = c; }
+            if (nCost) { nCost.max = 100; nCost.value = c; }
+            if (rTime) { rTime.max = 100; rTime.value = t; }
+            if (nTime) { nTime.max = 100; nTime.value = t; }
+            if (rDist) { rDist.max = 100; rDist.value = d; }
+            if (nDist) { nDist.max = 100; nDist.value = d; }
+
+            const totalEl = document.getElementById('txtTotalWeight');
+            if (totalEl) {
+                const roundTotal = Math.round(total);
+                if (roundTotal === 100) {
+                    totalEl.innerHTML = `<span class="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold">🔒 Toplam: %100 (Dolu)</span>`;
+                } else {
+                    totalEl.innerHTML = `<span class="text-blue-600 dark:text-blue-400 font-bold">Toplam: %${roundTotal} <span class="text-slate-400 font-normal">(Kalan: %${Math.round(remaining)})</span></span>`;
+                }
+            }
+
+            const cW = total > 0 ? (c / total) * 100 : 33.3;
+            const tW = total > 0 ? (t / total) * 100 : 33.3;
+            const dW = total > 0 ? (d / total) * 100 : 33.3;
+
+            const barCost = document.getElementById('barCost');
+            const barTime = document.getElementById('barTime');
+            const barDist = document.getElementById('barDist');
+            if (barCost) barCost.style.width = `${cW}%`;
+            if (barTime) barTime.style.width = `${tW}%`;
+            if (barDist) barDist.style.width = `${dW}%`;
+        }
+
+        function onCustomSliderChange(type) {
+            if (type === 'cost') {
+                const inputVal = parseFloat(document.getElementById('rangeCost').value) || 0;
+                const other = (parseFloat(customWeights.time) || 0) + (parseFloat(customWeights.distance) || 0);
+                const maxAllowed = Math.max(0, 100 - other);
+                customWeights.cost = Math.min(maxAllowed, Math.max(0, inputVal));
+            } else if (type === 'time') {
+                const inputVal = parseFloat(document.getElementById('rangeTime').value) || 0;
+                const other = (parseFloat(customWeights.cost) || 0) + (parseFloat(customWeights.distance) || 0);
+                const maxAllowed = Math.max(0, 100 - other);
+                customWeights.time = Math.min(maxAllowed, Math.max(0, inputVal));
+            } else if (type === 'dist') {
+                const inputVal = parseFloat(document.getElementById('rangeDist').value) || 0;
+                const other = (parseFloat(customWeights.cost) || 0) + (parseFloat(customWeights.time) || 0);
+                const maxAllowed = Math.max(0, 100 - other);
+                customWeights.distance = Math.min(maxAllowed, Math.max(0, inputVal));
+            }
+            updateCustomModalUI();
+        }
+
+        function onCustomNumberChange(type) {
+            if (type === 'cost') {
+                const inputVal = parseFloat(document.getElementById('numCost').value) || 0;
+                const other = (parseFloat(customWeights.time) || 0) + (parseFloat(customWeights.distance) || 0);
+                const maxAllowed = Math.max(0, 100 - other);
+                customWeights.cost = Math.min(maxAllowed, Math.max(0, inputVal));
+            } else if (type === 'time') {
+                const inputVal = parseFloat(document.getElementById('numTime').value) || 0;
+                const other = (parseFloat(customWeights.cost) || 0) + (parseFloat(customWeights.distance) || 0);
+                const maxAllowed = Math.max(0, 100 - other);
+                customWeights.time = Math.min(maxAllowed, Math.max(0, inputVal));
+            } else if (type === 'dist') {
+                const inputVal = parseFloat(document.getElementById('numDist').value) || 0;
+                const other = (parseFloat(customWeights.cost) || 0) + (parseFloat(customWeights.time) || 0);
+                const maxAllowed = Math.max(0, 100 - other);
+                customWeights.distance = Math.min(maxAllowed, Math.max(0, inputVal));
+            }
+            updateCustomModalUI();
+        }
+
+        function applyCustomPreset(cost, time, dist) {
+            customWeights = { cost, time, distance: dist };
+            updateCustomModalUI();
+        }
+
+        async function submitCustomScenario() {
+            const btnText = document.getElementById('btnSubmitCustomText');
+            const spinner = document.getElementById('btnSubmitCustomSpinner');
+            btnText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            try {
+                showToast('Özel ağırlıklarla optimizasyon hesaplanıyor...', 'info');
+                const res = await fetch('/api/scenario/custom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ weights: customWeights })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    rawData = json.data;
+                    activeScenario = 'custom';
+                    if (rawData.custom_weights) customWeights = rawData.custom_weights;
+                    updateScenarioButtons();
+                    renderDashboard();
+                    closeCustomScenarioModal();
+                    showToast(`Özel hibrit senaryo başarıyla uygulandı! (%${customWeights.cost} Maliyet - %${customWeights.time} Süre - %${customWeights.distance} Mesafe)`, 'success');
+                } else {
+                    showToast('Hata: ' + json.error, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Bağlantı hatası oluştu!', 'error');
+            } finally {
+                btnText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // Trigger Reoptimization
+        async function triggerReoptimization() {
+            const icon = document.getElementById('recalcIcon');
+            icon.classList.add('animate-spin');
+            showToast('Optimizasyon baştan hesaplanıyor...', 'info');
+
+            try {
+                const res = await fetch('/api/optimize', { method: 'POST' });
+                const json = await res.json();
+                if (json.success) {
+                    rawData = json.data;
+                    renderDashboard();
+                    showToast('Optimizasyon başarıyla tamamlandı!', 'success');
+                } else {
+                    showToast('Hata: ' + json.error, 'error');
+                }
+            } catch (e) {
+                showToast('Bağlantı hatası!', 'error');
+            } finally {
+                icon.classList.remove('animate-spin');
+            }
+        }
+
+        // New Order Modal Logic
+        function openNewOrderModal() {
+            const modal = document.getElementById('newOrderModal');
+            const card = document.getElementById('modalCard');
+            modal.classList.remove('hidden');
+            _lastValidationState = null;
+            _addressFromSuggestion = false; // Reset flag
+            document.getElementById('addressValidationBadge').classList.add('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+                initAdresAutocomplete();
+            }, 10);
+        }
+
+        function closeNewOrderModal() {
+            const modal = document.getElementById('newOrderModal');
+            const card = document.getElementById('modalCard');
+            modal.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Canlı Adres Doğrulama (yazarken real-time)
+        let _addressValidationTimer = null;
+        let _lastValidationState = null;
+        let _addressFromSuggestion = false; // Dropdown'dan seçildi mi?
+
+        async function validateAddressRealtime() {
+            const inp = document.getElementById('inpAdres');
+            const badge = document.getElementById('addressValidationBadge');
+            if (!inp || !badge) return;
+
+            const address = inp.value.trim();
+            clearTimeout(_addressValidationTimer);
+
+            // Kullanıcı el ile düzenleme yapıyorsa dropdown seçimini sıfırla
+            _addressFromSuggestion = false;
+
+            if (!address) {
+                badge.classList.add('hidden');
+                _lastValidationState = null;
+                return;
+            }
+
+            // Doğrulamayı 400ms debounce'la (aşırı API çağrısını önle)
+            _addressValidationTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch('/api/validate-address', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: address })
+                    });
+                    const result = await res.json();
+
+                    const statusEl = document.getElementById('validationStatus');
+                    const messageEl = document.getElementById('validationMessage');
+
+                    if (result.valid) {
+                        // ✅ Geçerli adres
+                        badge.className = 'mt-2 p-2.5 rounded-lg flex items-start gap-2.5 text-xs border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40';
+                        statusEl.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400 font-bold">✅ Geçerli Adres</span>';
+                        messageEl.textContent = `${result.location_name || address} — İçinde optimize edilebilir`;
+                        _lastValidationState = { valid: true, lat: result.lat, lon: result.lon, location_name: result.location_name };
+                    } else {
+                        // ❌ Geçersiz adres
+                        const isOutOfBounds = result.reason && result.reason.includes('Hizmet bölgesi');
+                        badge.className = `mt-2 p-2.5 rounded-lg flex items-start gap-2.5 text-xs border ${isOutOfBounds ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800/40' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/40'}`;
+                        statusEl.innerHTML = `<span class="${isOutOfBounds ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400'} font-bold">${isOutOfBounds ? '⚠️ Dış Bölge' : '❌ Geçersiz'}</span>`;
+                        messageEl.textContent = result.reason || 'Adres doğrulama başarısız oldu.';
+                        _lastValidationState = { valid: false, reason: result.reason };
+                    }
+                    badge.classList.remove('hidden');
+                } catch (e) {
+                    badge.classList.add('hidden');
+                    _lastValidationState = null;
+                }
+            }, 400);
+        }
+
+        function validateAddressBeforeSubmit() {
+            const address = (document.getElementById('inpAdres')?.value || '').trim();
+            if (!address) {
+                showToast('Lütfen bir teslimat/toplama adresi giriniz.', 'error');
+                return false;
+            }
+
+            // 1. Dropdown önerilerinden seçilmişse doğrudan geçerli kabul et
+            if (_addressFromSuggestion) {
+                return true;
+            }
+
+            // 2. Canlı doğrulama tamamlanmış ve geçerli ise kabul et
+            if (_lastValidationState && _lastValidationState.valid) {
+                return true;
+            }
+
+            // 3. Canlı doğrulama tamamlanmış ve geçersiz bulunmuşsa uyar
+            if (_lastValidationState && !_lastValidationState.valid) {
+                showToast('Seçilen adres geçersiz: ' + (_lastValidationState.reason || 'Lütfen önerilen adreslerden seçin.'), 'error');
+                return false;
+            }
+
+            // 4. Doğrulama beklemedeyse veya manuel yazılmışsa izin ver (arka plan geocode çözer)
+            return true;
+        }
+
+        async function submitNewOrder(e) {
+            e.preventDefault();
+
+            // Adres doğrulamasını kontrol et
+            if (!validateAddressBeforeSubmit()) {
+                return;
+            }
+
+            const btnText = document.getElementById('btnSubmitText');
+            const spinner = document.getElementById('btnSubmitSpinner');
+            btnText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            const orderData = {
+                musteri_adi: document.getElementById('inpMusteri').value,
+                adres: document.getElementById('inpAdres').value,
+                islem_tipi: document.getElementById('inpIslem').value,
+                kategori: document.getElementById('inpKategori').value,
+                agirlik_kg: parseFloat(document.getElementById('inpKg').value),
+                desi: parseFloat(document.getElementById('inpDesi').value),
+                zaman_baslangic: document.getElementById('inpZamanBas').value,
+                zaman_bitis: document.getElementById('inpZamanBit').value,
+                servis_suresi_dk: parseInt(document.getElementById('inpServis').value),
+                arac_id: document.getElementById('inpArac') ? document.getElementById('inpArac').value : ''
+            };
+
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    rawData = json.data;
+                    renderDashboard();
+                    closeNewOrderModal();
+                    document.getElementById('newOrderForm').reset();
+                    showToast('Yeni sipariş eklendi ve rota anında güncellendi!', 'success');
+                } else {
+                    showToast('Hata: ' + json.error, 'error');
+                }
+            } catch (err) {
+                showToast('Sipariş kaydedilirken bağlantı hatası oluştu.', 'error');
+            } finally {
+                btnText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // Export Table to CSV
+        function exportTableToCSV() {
+            if (!rawData || !rawData.orders) return;
+            let csv = "Kargo_Takip_No,Musteri_Adi,Adres,Islem_Tipi,Agirlik_KG,Desi,Kategori,Zaman_Penceresi,Atanan_Arac,Durak_Sirasi\n";
+            rawData.orders.forEach(o => {
+                csv += `"${o.kargo_takip_no}","${o.musteri_adi}","${o.adres}","${o.islem_tipi}",${o.agirlik_kg},${o.desi},"${o.kategori}","${o.zaman_baslangic}-${o.zaman_bitis}","${o.arac_id}","${o.sira}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `kargo_rotalari_${activeScenario}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('CSV dosyası indirildi.', 'success');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bgColors = {
+                'success': 'bg-emerald-600 text-white',
+                'error': 'bg-red-600 text-white',
+                'info': 'bg-slate-800 text-white'
+            };
+
+            toast.className = `toast-animate pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-semibold ${bgColors[type] || bgColors['info']}`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ')}</span>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        // Dark Mode Logic
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Adres otomatik tamamlama (ORS) — yazdıkça Türkiye adres önerileri
+        let _adresTimer = null;
+        function initAdresAutocomplete() {
+            const inp = document.getElementById('inpAdres');
+            const box = document.getElementById('adresSuggest');
+            if (!inp || !box) return;
+            inp.addEventListener('input', () => {
+                const q = inp.value.trim();
+                clearTimeout(_adresTimer);
+                if (q.length < 3) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+                // 300 ms debounce: her tuşta değil, yazım durunca sor (kota koruması)
+                _adresTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch('/api/autocomplete?q=' + encodeURIComponent(q));
+                        const j = await res.json();
+                        const items = j.suggestions || [];
+                        if (!items.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+                        box.innerHTML = items.map(s => {
+                            const safe = (s.label || '').replace(/"/g, '&quot;');
+                            const lat = s.lat != null ? s.lat : '';
+                            const lon = s.lon != null ? s.lon : '';
+                            return `<div class="adres-oneri px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700 last:border-0" data-label="${safe}" data-lat="${lat}" data-lon="${lon}">${s.label}</div>`;
+                        }).join('');
+                        box.classList.remove('hidden');
+                        box.querySelectorAll('.adres-oneri').forEach(el => {
+                            el.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const label = el.getAttribute('data-label');
+                                const lat = el.getAttribute('data-lat');
+                                const lon = el.getAttribute('data-lon');
+                                inp.value = label;
+                                _addressFromSuggestion = true; // Dropdown'dan başarıyla seçildi
+                                _lastValidationState = {
+                                    valid: true,
+                                    lat: lat ? parseFloat(lat) : null,
+                                    lon: lon ? parseFloat(lon) : null,
+                                    location_name: label
+                                };
+                                box.classList.add('hidden');
+                                box.innerHTML = '';
+
+                                // Doğrulama badge'ini anında yeşil göster
+                                const badge = document.getElementById('addressValidationBadge');
+                                const statusEl = document.getElementById('validationStatus');
+                                const messageEl = document.getElementById('validationMessage');
+                                if (badge && statusEl && messageEl) {
+                                    badge.className = 'mt-2 p-2.5 rounded-lg flex items-start gap-2.5 text-xs border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40';
+                                    statusEl.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400 font-bold">✅ Doğrulandı</span>';
+                                    messageEl.textContent = `${label} — Optimizasyona hazır`;
+                                    badge.classList.remove('hidden');
+                                }
+                            });
+                        });
+                    } catch (e) { box.classList.add('hidden'); }
+                }, 300);
+            });
+            // Dışarı tıklayınca öneri kutusunu kapat
+            document.addEventListener('click', (ev) => {
+                if (!box.contains(ev.target) && ev.target !== inp) box.classList.add('hidden');
+            });
+        }
+
+        // Initial Setup
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+
+            // Bind filter inputs to live search
+            document.getElementById('filterSearch').addEventListener('input', applyFilters);
+            document.getElementById('filterVehicle').addEventListener('change', applyFilters);
+            document.getElementById('filterStatus').addEventListener('change', applyFilters);
+
+            // Adres autocomplete'i başlat
+            initAdresAutocomplete();
+
+            // Fetch Initial Data
+            fetchDashboardData();
+        });
+    </script>
+</body>
+</html>

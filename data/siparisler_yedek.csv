@@ -1,0 +1,17 @@
+kargo_takip_no,musteri_adi,adres,islem_tipi,agirlik_kg,desi,kategori,zaman_baslangic,zaman_bitis,servis_suresi_dk
+0,Kadikoy Sube (Depo),"Hasanpasa, Kadikoy, Istanbul",DEPO,0.0,0.0,DEPO,08:00,20:00,0
+KP001,Alici - Moda,"Caferaga, Moda Caddesi, Kadikoy, Istanbul",TESLIMAT,3.5,12.0,STANDART,09:00,18:00,5
+KP002,Alici - Bostanci,"Bostanci, Kadikoy, Istanbul",TESLIMAT,8.0,25.0,STANDART,09:00,18:00,6
+KP003,Alici - Atasehir,"Kucukbakkalkoy, Atasehir, Istanbul",TESLIMAT,2.0,6.0,EXPRESS,10:00,12:00,4
+KP004,Alici - Uskudar,"Mimar Sinan, Uskudar, Istanbul",TESLIMAT,15.0,40.0,STANDART,13:00,17:00,8
+KP005,Magaza Iadesi - Maltepe,"Baglarbasi, Maltepe, Istanbul",TOPLAMA,5.0,18.0,STANDART,09:00,18:00,5
+KP006,Alici - Kartal,"Kordonboyu, Kartal, Istanbul",TESLIMAT,40.0,120.0,AGIR_YUK,09:00,18:00,12
+KP007,Alici - Pendik,"Bati, Pendik, Istanbul",TESLIMAT,6.0,20.0,STANDART,14:00,18:00,6
+KP008,Satici Toplama - Umraniye,"Ataturk, Umraniye, Istanbul",TOPLAMA,10.0,30.0,STANDART,09:00,16:00,7
+KP009,Alici - Cekmekoy,"Alemdag, Cekmekoy, Istanbul",TESLIMAT,3.0,9.0,EXPRESS,11:00,13:00,5
+KP010,Alici - Beykoz Plaza,"Kavacik, Beykoz, Istanbul",TESLIMAT,25.0,70.0,AGIR_YUK,10:00,16:00,15
+KP011,Alici - Sancaktepe,"Abdurrahmangazi, Sancaktepe, Istanbul",TESLIMAT,4.0,14.0,STANDART,09:00,18:00,5
+KP012,Iade - Tuzla,"Aydinli, Tuzla, Istanbul",TOPLAMA,7.0,22.0,STANDART,09:00,18:00,6
+KP013,Zeynep Erşan,Caferağa Mahallesi kadıköy,TESLIMAT,20.0,25.0,EXPRESS,09:00,18:00,10
+KP016,Zeynep Erşan,"Levent, Istanbul, Turkey",TESLIMAT,3.5,10.0,STANDART,09:00,18:00,5
+KP015,Zeynep Erşan,"Kadiköy, IB, Turkey",TESLIMAT,3.5,10.0,STANDART,09:00,18:00,5

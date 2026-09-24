@@ -1,0 +1,18 @@
+kargo_takip_no,musteri_adi,adres,islem_tipi,agirlik_kg,desi,kategori,zaman_baslangic,zaman_bitis,servis_suresi_dk,atanan_arac
+0,Kadikoy Sube (Depo),"Hasanpasa, Kadikoy, Istanbul",DEPO,0.0,0.0,DEPO,08:00,20:00,0,
+KP001,Zeynep Erşan (Hızlı Kurye),"Kadıköy Verem Savaş Dispanseri, Istanbul, Turkey",TESLIMAT,2.5,5.0,EXPRESS,09:00,13:00,5,34-MOTO-01
+KP002,Ahmet Yılmaz (Moda Express),"Caferaga, Moda Caddesi, Kadikoy, Istanbul",TESLIMAT,1.8,4.0,EXPRESS,09:30,12:30,5,34-MOTO-01
+KP003,Caner Şahin (Medikal Hızlı),"Acıbadem Dr. Şinasi Can (Kadıköy) Hastanesi, Istanbul, Turkey",TESLIMAT,3.0,6.0,EXPRESS,09:00,12:00,5,34-MOTO-01
+KP004,Selin Öztürk (Express Evrak),"Göztepe, Kadıköy, Istanbul",TESLIMAT,2.2,4.5,EXPRESS,09:30,13:30,5,34-MOTO-02
+KP005,Burak Korkmaz (Moto Dağıtım),"Koşuyolu, Kadıköy, Istanbul",TESLIMAT,4.0,8.0,EXPRESS,10:00,14:00,5,34-MOTO-02
+KP006,Merve Aydın (Butik Sipariş),"Suadiye, Kadıköy, Istanbul",TESLIMAT,5.5,10.0,EXPRESS,11:00,15:00,5,34-MOTO-02
+KP007,Ayşe Demir (Standart Koli),"Bostanci, Kadikoy, Istanbul",TESLIMAT,15.0,25.0,STANDART,10:00,16:00,5,34-PNL-01
+KP008,Elif Çelik (Mağaza İade),"Kucukbakkalkoy, Atasehir, Istanbul",TOPLAMA,8.0,15.0,STANDART,11:00,17:00,5,34-PNL-01
+KP009,Ece Yılmaz (E-Ticaret Toplama),"Barbaros, Ataşehir, Istanbul",TOPLAMA,12.0,20.0,STANDART,13:00,18:00,5,34-PNL-01
+KP010,Murat Kara (Ev Dağıtım),"İçerenköy, Ataşehir, Istanbul",TESLIMAT,18.0,30.0,STANDART,12:00,17:00,5,34-PNL-01
+KP011,Onur Yıldız (Yedek Parça Dağıtım),"Altunizade, Üsküdar, Istanbul",TESLIMAT,35.0,40.0,STANDART,10:00,15:00,8,34-PNL-02
+KP012,Derya Arslan (Depo Dağıtım),"Çakmak, Ümraniye, Istanbul",TESLIMAT,45.0,55.0,STANDART,11:00,16:00,8,34-PNL-02
+KP013,Kemal Tekin (Ticari Sevkiyat),"Küçükyalı, Maltepe, Istanbul",TESLIMAT,22.0,35.0,STANDART,12:30,17:30,6,34-PNL-02
+KP014,Mehmet Kaya (Ağır Sanayi Yükü),"Mimar Sinan, Uskudar, Istanbul",TESLIMAT,180.0,140.0,AGIR_YUK,10:30,15:30,15,34-KMY-01
+KP015,Hakan Demir (Ofis Mobilya & Palet),"Beylerbeyi, Üsküdar, Istanbul",TESLIMAT,220.0,160.0,AGIR_YUK,11:30,16:30,15,34-KMY-01
+KP016,Serkan Güneş (Ağır Makine Parçası),"Cevizli, Kartal, Istanbul",TESLIMAT,260.0,180.0,AGIR_YUK,10:00,16:00,15,34-KMY-01

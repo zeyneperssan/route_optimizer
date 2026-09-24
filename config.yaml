@@ -1,0 +1,36 @@
+# ==========================================
+# LOJİSTİK ROTA OPTİMİZASYON SİSTEMİ - AYARLAR
+# ==========================================
+
+# 1. Optimizasyon Hedefi: "distance" (en kısa), "time" (en hızlı), "cost" (en ucuz)
+objective: "distance"
+
+# 2. Veri Yolları
+data:
+  orders_file: "data/siparisler.csv"
+  vehicles_file: "data/araclar.csv"
+
+# 3. Önbellek (Cache) Ayarları - API Kotasını Korumak İçin
+cache:
+  enabled: true
+  geocode_cache_file: "cache/geocode_cache.json"
+  matrix_cache_file: "cache/matrix_cache.json"
+  rota_harita_file: "cache/rota_haritasi.html"
+  kpi_report_file: "cache/kpi_raporu.csv"
+  maps_dir: "cache/"
+
+# 4. OpenRouteService (ORS) Ayarları
+ors:
+  profile: "driving-car"  # Karayolu araç profili
+  country_code: "TUR"     # Arama yapılacak varsayılan ülke
+  # Adres önerileri bu noktaya (Kadıköy şube) yakınlığa göre sıralanır.
+  # "Barbaros", "Merkez" gibi Türkiye'de tekrarlayan mahalle adlarının
+  # yanlış ilçeye/İstanbul'un yanlış yakasına eşleşmesini azaltır.
+  focus_lat: 40.997314
+  focus_lon: 29.044531
+
+# 5. OR-Tools Çözücü Ayarları
+solver:
+  time_limit_seconds: 1                     # Senaryo başına 1 saniye (4 senaryo toplamı ~4-5 sn sürer, hızlı yanıt)
+  first_solution_strategy: "SAVINGS"        # Araç birleştirme ve filo tasarrufu için Clarke-Wright Savings
+  local_search_metaheuristic: "GUIDED_LOCAL_SEARCH" # İyileştirme metasezgisi
